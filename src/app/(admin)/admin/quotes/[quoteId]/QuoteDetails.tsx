@@ -76,7 +76,7 @@ export default function QuoteDetails({ quoteId }: { quoteId: string }) {
       const accountResponse = await getAccountDetails(
         quote?.data?.[0].account_id,
       );
-      setAccounts(accountResponse.data);
+      setAccounts((accountResponse as any).data);
     };
     init();
   }, [quoteId]);

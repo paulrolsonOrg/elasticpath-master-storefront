@@ -82,10 +82,10 @@ export async function getAllSalesReps() {
 
 export async function getAccountAddresses(
   accountId: string,
-): Promise<ResourcePage<AccountTokenBase>> {
+): Promise<ResourcePage<AccountAddress>> {
   const client = getServerSideCredentialsClientWihoutAccountToken();
-  return client.AccountAddresses.All({ account: accountId }).catch((err) => {
-    return err;
+  return client.AccountAddresses.All({ account: accountId }).catch((err: unknown) => {
+    return err as ResourcePage<AccountAddress>;
   });
 }
 
@@ -180,7 +180,7 @@ export async function applyCartCustomDiscount(id: string, request: any) {
   return await client
     .Cart(id)
     .AddCartCustomDiscount(data)
-    .catch((err) => {
+    .catch((err: unknown) => {
       return err;
     });
 }
@@ -203,7 +203,7 @@ export async function applyItemCustomDiscount(
   return await client
     .Cart(id)
     .AddItemCustomDiscount(itemId, data)
-    .catch((err) => {
+    .catch((err: unknown) => {
       return err;
     });
 }
@@ -244,7 +244,7 @@ export async function createNewQuote(cartId: string, request?: any) {
       undefined,
       "v2",
     )
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error("Error while creating new quote", err);
       return err;
     });
@@ -284,7 +284,7 @@ export async function createShippingGroup(id: string, request: any) {
       undefined,
       "v2",
     )
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error("Error while creating shipping group", err);
       return err;
     });
@@ -302,7 +302,7 @@ export async function getShippingGroups(id: string) {
       undefined,
       "v2",
     )
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error("Error while getting shipping group", err);
       return err;
     });
@@ -310,7 +310,7 @@ export async function getShippingGroups(id: string) {
 
 export async function getAccountDetails(accountId: string) {
   const client = getServerSideCredentialsClientWihoutAccountToken();
-  return await client.Accounts.Get(accountId).catch((err) => {
+  return await client.Accounts.Get(accountId).catch((err: unknown) => {
     console.error("Error while getting account details", err);
     return err;
   });
@@ -321,7 +321,7 @@ export async function getAccountOrderDetails(account_id: string) {
   return await client.Orders.With("items")
     .Filter({ eq: { account_id, payment: "paid" } })
     .All()
-    .catch((err) => {
+    .catch((err: unknown) => {
       console.error("Error while getting account details", err);
       return err;
     });

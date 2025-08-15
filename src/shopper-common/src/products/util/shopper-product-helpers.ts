@@ -31,7 +31,7 @@ export async function createShopperBundleProduct(
     throw new Error("component_products where unexpectedly undefined");
   }
   const mainImageIds = componentProducts
-    .map((c) => c.relationships?.main_image?.data?.id)
+    .map((c: any) => c.relationships?.main_image?.data?.id)
     .filter(isString);
   const { data: mainProductComponentImages } = await getFilesByIds(
     mainImageIds,

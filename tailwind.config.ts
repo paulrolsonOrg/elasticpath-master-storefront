@@ -64,10 +64,10 @@ export default {
     require("@tailwindcss/forms"),
     require("tailwindcss-animate"),
     require("tailwind-clip-path"),
-    plugin(({ matchUtilities, theme }) => {
+    plugin(({ matchUtilities, theme }: any) => {
       matchUtilities(
         {
-          "animation-delay": (value) => {
+          "animation-delay": (value: string) => {
             return {
               "animation-delay": value,
             };

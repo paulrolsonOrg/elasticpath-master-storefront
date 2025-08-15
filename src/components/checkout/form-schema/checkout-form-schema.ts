@@ -15,6 +15,7 @@ const accountMemberInformationSchema = z.object({
 });
 
 const billingAddressSchema = z.object({
+  address_name: z.string().optional().or(emptyStringToUndefined),
   first_name: z.string().optional().or(emptyStringToUndefined),
   last_name: z.string().optional().or(emptyStringToUndefined),
   company_name: z.string().optional().or(emptyStringToUndefined),
@@ -25,9 +26,11 @@ const billingAddressSchema = z.object({
   region: z.string().optional().or(emptyStringToUndefined),
   postcode: z.string().optional().or(emptyStringToUndefined),
   country: z.string().optional().or(emptyStringToUndefined),
+  phone_number: z.string().optional().or(emptyStringToUndefined),
 });
 
 export const shippingAddressSchema = z.object({
+  address_name: z.string().optional().or(emptyStringToUndefined),
   first_name: z.string({ required_error: "First name is required" }),
   last_name: z.string({ required_error: "Last name is required" }),
   company_name: z.string().optional().or(emptyStringToUndefined),
