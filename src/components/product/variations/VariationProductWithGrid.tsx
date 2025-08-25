@@ -29,6 +29,7 @@ import moment from "moment";
 import { getInventoryDetails } from "../actions";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import VariationQuantityGrid from "./VariationQuantityGrid";
+import { getSkuIdFromOptions } from "../../../lib/product-helper";
 builder.init(process.env.NEXT_PUBLIC_BUILDER_IO_KEY || "");
 
 interface VariationQuantity {
@@ -36,6 +37,7 @@ interface VariationQuantity {
   optionId: string;
   optionName: string;
   quantity: number;
+  optionCombination?: string[];
 }
 
 export const VariationProductWithGridDetail = ({
@@ -159,24 +161,49 @@ export function VariationProductWithGridContainer({
       // Get the product ID for this specific variation combination
       let targetProductId: string;
       
-      if (variations.length === 1) {
+      if (variationQty.optionCombination && variationQty.optionCombination.length > 0) {
+        // Multiple variations - use the option combination to find the correct product ID
+        const foundProductId = getSkuIdFromOptions(variationQty.optionCombination, variationsMatrix);
+        targetProductId = foundProductId || id;
+        console.log(`Multiple variations: options=${JSON.stringify(variationQty.optionCombination)}, found productId=${foundProductId}`);
+      } else if (variations.length === 1) {
         // Single variation - direct lookup in matrix
         targetProductId = variationsMatrix[variationQty.optionId] || id;
+        console.log(`Single variation: optionId=${variationQty.optionId}, productId=${targetProductId}`);
       } else {
-        // Multiple variations - more complex lookup needed
-        // For now, we'll use the base product ID and pass variation info
+        // Fallback to base product ID
         targetProductId = id;
+        console.log(`Fallback: using base product ID=${id}`);
+      }
+
+      // Build variation information for cart item
+      const variationInfo: any[] = [
+        {
+          key: "Variation",
+          value: variationQty.optionName,
+        }
+      ];
+
+      // Add individual variation details if we have option combination
+      if (variationQty.optionCombination && variationQty.optionCombination.length > 1) {
+        variationQty.optionCombination.forEach((optionId, index) => {
+          const variation = variations[index];
+          if (variation) {
+            const option = variation.options.find((opt: any) => opt.id === optionId);
+            if (option) {
+              variationInfo.push({
+                key: variation.name,
+                value: option.description,
+              });
+            }
+          }
+        });
       }
 
       const data: any = {
         custom_inputs: {
-          additional_information: [
-            {
-              key: "Variation",
-              value: variationQty.optionName,
-            }
-          ],
-          options: [variationQty.optionName],
+          additional_information: variationInfo,
+          options: variationQty.optionName.split(' / '), // Split combined option names
         },
       };
       
