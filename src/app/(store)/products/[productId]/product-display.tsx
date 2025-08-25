@@ -2,9 +2,11 @@
 import React, { ReactElement, ReactNode, useState } from "react";
 import { ShopperProduct } from "../../../../react-shopper-hooks";
 import { VariationProductDetail } from "../../../../components/product/variations/VariationProduct";
+import { VariationProductWithGridDetail } from "../../../../components/product/variations/VariationProductWithGrid";
 import BundleProductDetail from "../../../../components/product/bundles/BundleProduct";
 import { ProductContext } from "../../../../lib/product-context";
 import SimpleProductDetail from "../../../../components/product/SimpleProduct";
+import SimpleProductWithSizeGridDetail from "../../../../components/product/SimpleProductWithSizeGrid";
 import {
   Extensions,
   Node,
@@ -83,6 +85,58 @@ export function resolveProductDetailComponent(
   }
 }
 
+export function resolveProductDetailComponentWithSizeGrid(
+  product: ShopperProduct,
+  offerings: ResourcePage<SubscriptionOffering, never>,
+  content: any,
+  relationship: any[],
+  purchaseHistory: any,
+  sizes?: string[],
+): JSX.Element {
+  switch (product.kind) {
+    case "base-product":
+      return (
+        <VariationProductWithGridDetail
+          variationProduct={product}
+          offerings={offerings}
+          content={content}
+          relationship={relationship}
+          purchaseHistory={purchaseHistory}
+        />
+      );
+    case "child-product":
+      return (
+        <VariationProductWithGridDetail
+          variationProduct={product}
+          offerings={offerings}
+          content={content}
+          relationship={relationship}
+          purchaseHistory={purchaseHistory}
+        />
+      );
+    case "simple-product":
+      return (
+        <SimpleProductWithSizeGridDetail
+          simpleProduct={product}
+          offerings={offerings}
+          content={content}
+          relationship={relationship}
+          purchaseHistory={purchaseHistory}
+          sizes={sizes}
+        />
+      );
+    case "bundle-product":
+      return (
+        <BundleProductDetail
+          bundleProduct={product}
+          offerings={offerings}
+          content={content}
+          relationship={relationship}
+        />
+      );
+  }
+}
+
 export function ProductDetailsComponent({
   product,
   breadcrumb,
@@ -91,6 +145,8 @@ export function ProductDetailsComponent({
   relationship,
   purchaseHistory,
   chatbotApiKey,
+  useSizeGrid = false,
+  sizes,
 }: {
   product: ShopperProduct;
   breadcrumb: Node[];
@@ -99,6 +155,8 @@ export function ProductDetailsComponent({
   relationship: any[];
   purchaseHistory: any;
   chatbotApiKey?: string;
+  useSizeGrid?: boolean;
+  sizes?: string[];
 }) {
   return (
     <div className="px-4 xl:px-0 py-8 mx-auto max-w-[48rem] lg:max-w-[80rem] w-full">
@@ -107,13 +165,23 @@ export function ProductDetailsComponent({
         productName={product.response.attributes.name}
       ></Breadcrumb>
       <div>
-        {resolveProductDetailComponent(
-          product,
-          offerings,
-          content,
-          relationship,
-          purchaseHistory,
-        )}
+        {useSizeGrid 
+          ? resolveProductDetailComponentWithSizeGrid(
+              product,
+              offerings,
+              content,
+              relationship,
+              purchaseHistory,
+              sizes,
+            )
+          : resolveProductDetailComponent(
+              product,
+              offerings,
+              content,
+              relationship,
+              purchaseHistory,
+            )
+        }
         {chatbotApiKey && (
           <SmartQuestionsBot
             extensions={product.response.attributes.extensions as Extensions}
