@@ -20,6 +20,7 @@ import {
 import { Label } from "../label/Label";
 import { useCountries } from "../../hooks/use-countries";
 import { countries as staticCountries } from "../../lib/all-countries";
+import { GooglePlacesAutocomplete, PlaceResult } from "./GooglePlacesAutocomplete";
 
 export interface AddressData {
   address_name?: string;
@@ -70,6 +71,11 @@ export interface UnifiedAddressFormProps {
   
   // Countries data source
   useStaticCountries?: boolean;
+  
+  // Google Places configuration
+  enableGooglePlaces?: boolean;
+  googlePlacesApiKey?: string;
+  googlePlacesCountries?: string[];
 }
 
 const defaultFields = {
@@ -101,13 +107,13 @@ export function UnifiedAddressForm(props: UnifiedAddressFormProps) {
 
 // Component for React Hook Form mode (can call useFormContext)
 function RHFAddressForm(props: UnifiedAddressFormProps) {
-  const { control } = useFormContext();
-  return <AddressFormCore {...props} control={control} />;
+  const { control, setValue } = useFormContext();
+  return <AddressFormCore {...props} control={control} setValue={setValue} />;
 }
 
 // Component for Server Action mode (doesn't call useFormContext)
 function SAAddressForm(props: UnifiedAddressFormProps) {
-  return <AddressFormCore {...props} control={null} />;
+  return <AddressFormCore {...props} control={null} setValue={null} />;
 }
 
 // Core component that contains the actual form logic
@@ -122,8 +128,12 @@ function AddressFormCore({
   layout = 'checkout',
   useStaticCountries = false,
   fieldMapping = {},
+  enableGooglePlaces = false,
+  googlePlacesApiKey,
+  googlePlacesCountries,
   control,
-}: UnifiedAddressFormProps & { control: any }) {
+  setValue,
+}: UnifiedAddressFormProps & { control: any; setValue: any }) {
   const finalFields = { ...defaultFields, ...fields };
   const { data: dynamicCountries } = useCountries();
   const countries = useStaticCountries ? staticCountries : dynamicCountries;
@@ -133,6 +143,20 @@ function AddressFormCore({
     const mappedName = fieldMapping[fieldName as keyof typeof fieldMapping] || fieldName;
     return fieldPrefix ? `${fieldPrefix}.${mappedName}` : mappedName;
   }, [fieldPrefix, fieldMapping]);
+
+  // Handle Google Places selection
+  const handlePlaceSelect = React.useCallback((placeResult: PlaceResult) => {
+    if (mode === 'react-hook-form' && setValue) {
+      // Update React Hook Form fields using setValue
+      setValue(getFieldName('line_1'), placeResult.line_1);
+      setValue(getFieldName('city'), placeResult.city);
+      setValue(getFieldName('region'), placeResult.region);
+      setValue(getFieldName('postcode'), placeResult.postcode);
+      setValue(getFieldName('country'), placeResult.country);
+    }
+    // For server action mode, the GooglePlacesAutocomplete component
+    // will update the DOM inputs directly via JavaScript
+  }, [mode, setValue, getFieldName]);
 
   const getAutoComplete = React.useCallback((field: string) => {
     if (autoComplete === 'none') return undefined;
@@ -308,6 +332,41 @@ function AddressFormCore({
             {renderField("first_name", "First Name", "text", isRequired('first_name'))}
             {renderField("last_name", "Last Name", "text", isRequired('last_name'))}
           </div>
+        )}
+
+        {/* Google Places Autocomplete */}
+        {enableGooglePlaces && (
+          mode === 'react-hook-form' && control ? (
+            <FormField
+              control={control}
+              name={getFieldName('address_autocomplete')}
+              render={({ field }) => (
+                <GooglePlacesAutocomplete
+                  mode="react-hook-form"
+                  field={field}
+                  onPlaceSelect={handlePlaceSelect}
+                  apiKey={googlePlacesApiKey}
+                  countries={googlePlacesCountries}
+                  className={layout === 'account' ? 'col-span-full' : ''}
+                  label="Address"
+                  placeholder="Start typing your address..."
+                  enableGooglePlaces={enableGooglePlaces}
+                />
+              )}
+            />
+          ) : (
+            <GooglePlacesAutocomplete
+              mode="server-action"
+              name="address_autocomplete"
+              onPlaceSelect={handlePlaceSelect}
+              apiKey={googlePlacesApiKey}
+              countries={googlePlacesCountries}
+              className={layout === 'account' ? 'col-span-full' : ''}
+              label="Address"
+              placeholder="Start typing your address..."
+              enableGooglePlaces={enableGooglePlaces}
+            />
+          )
         )}
 
         {/* Company */}

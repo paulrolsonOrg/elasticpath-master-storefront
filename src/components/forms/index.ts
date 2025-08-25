@@ -1,1 +1,2 @@
 export { UnifiedAddressForm, type UnifiedAddressFormProps, type AddressData } from './UnifiedAddressForm';
+export { GooglePlacesAutocomplete, type GooglePlacesAutocompleteProps, type PlaceResult } from './GooglePlacesAutocomplete';

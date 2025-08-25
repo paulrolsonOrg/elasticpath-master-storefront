@@ -23,6 +23,7 @@ export function AddAddressForm() {
       autoComplete="shipping"
       useStaticCountries={true}
       required={['address_name', 'first_name', 'last_name', 'line_1', 'postcode', 'country']}
+      enableGooglePlaces={true}
     />
   );
 }

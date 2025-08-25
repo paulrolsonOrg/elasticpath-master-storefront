@@ -72,6 +72,7 @@ export function UpdateForm({
         useStaticCountries={true}
         defaultValues={defaultValues}
         required={['address_name', 'first_name', 'last_name', 'line_1', 'postcode', 'country']}
+        enableGooglePlaces={true}
       />
       <div className="flex">
         <FormStatusButton variant="secondary" type="submit">

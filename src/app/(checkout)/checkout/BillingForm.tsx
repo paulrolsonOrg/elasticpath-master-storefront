@@ -68,6 +68,7 @@ export function BillingForm() {
           layout="checkout"
           useStaticCountries={false}
           required={[]}
+          enableGooglePlaces={true}
         />
       )}
     </fieldset>

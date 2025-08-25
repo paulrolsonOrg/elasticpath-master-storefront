@@ -20,6 +20,7 @@ export function ShippingForm() {
       }}
       layout="checkout"
       useStaticCountries={false}
+      enableGooglePlaces={true}
     />
   );
 }
