@@ -10,6 +10,7 @@ interface DraggableCanvasProps {
   onImageUpdate: (id: string, updates: Partial<CanvasImage>) => void;
   onImageDelete: (id: string) => void;
   onImageDrop: (product: ShopperProduct, x: number, y: number) => void;
+  isSnapping?: boolean;
 }
 
 interface DragState {
@@ -28,6 +29,7 @@ export function DraggableCanvas({
   onImageUpdate,
   onImageDelete,
   onImageDrop,
+  isSnapping = false,
 }: DraggableCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState>({
@@ -146,10 +148,12 @@ export function DraggableCanvas({
       onClick={handleCanvasClick}
       style={{
         backgroundImage: `
-          linear-gradient(to right, #f3f4f6 1px, transparent 1px),
-          linear-gradient(to bottom, #f3f4f6 1px, transparent 1px)
+          linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+          linear-gradient(to bottom, #e5e7eb 1px, transparent 1px),
+          linear-gradient(to right, #d1d5db 2px, transparent 2px),
+          linear-gradient(to bottom, #d1d5db 2px, transparent 2px)
         `,
-        backgroundSize: '20px 20px',
+        backgroundSize: '10px 10px, 10px 10px, 50px 50px, 50px 50px',
       }}
     >
       {/* Drop Zone Indicator */}
@@ -178,6 +182,7 @@ export function DraggableCanvas({
           onMouseDown={(e) => handleImageMouseDown(e, image.id)}
           onKeyDown={(e) => handleImageKeyDown(e, image.id)}
           onResize={(width, height) => onImageUpdate(image.id, { width, height })}
+          isSnapping={isSnapping}
         />
       ))}
     </div>
@@ -191,6 +196,7 @@ interface CanvasImageItemProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onResize: (width: number, height: number) => void;
+  isSnapping?: boolean;
 }
 
 function CanvasImageItem({
@@ -200,6 +206,7 @@ function CanvasImageItem({
   onMouseDown,
   onKeyDown,
   onResize,
+  isSnapping = false,
 }: CanvasImageItemProps) {
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startWidth: number; startHeight: number; startX: number; startY: number } | null>(null);
@@ -251,7 +258,9 @@ function CanvasImageItem({
     <div
       className={`absolute cursor-move select-none ${
         isSelected ? 'ring-2 ring-blue-500' : ''
-      } ${isDragging ? 'opacity-75' : ''}`}
+      } ${isDragging ? 'opacity-75' : ''} ${
+        isSnapping ? 'transition-all duration-300 ease-out' : ''
+      }`}
       style={{
         left: image.x,
         top: image.y,

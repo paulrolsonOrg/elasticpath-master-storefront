@@ -30,6 +30,7 @@ export function SearchCanvas({
   const [canvasImages, setCanvasImages] = useState<CanvasImage[]>([]);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isSnapping, setIsSnapping] = useState(false);
 
   const handleImageDrop = useCallback((product: ShopperProduct, x: number, y: number) => {
     const imageUrl = product.main_image?.link?.href;
@@ -67,6 +68,23 @@ export function SearchCanvas({
     setCanvasImages([]);
     setSelectedImageId(null);
   }, []);
+
+  const snapToGrid = useCallback(() => {
+    const GRID_SIZE = 50; // Snap to 50px grid
+    
+    setIsSnapping(true);
+    
+    const snappedImages = canvasImages.map(image => ({
+      ...image,
+      x: Math.round(image.x / GRID_SIZE) * GRID_SIZE,
+      y: Math.round(image.y / GRID_SIZE) * GRID_SIZE,
+    }));
+    
+    setCanvasImages(snappedImages);
+    
+    // Reset snapping state after animation
+    setTimeout(() => setIsSnapping(false), 300);
+  }, [canvasImages]);
 
   const exportCanvas = useCallback(() => {
     const canvasData = {
@@ -111,6 +129,14 @@ export function SearchCanvas({
           
           <div className="flex items-center space-x-2">
             <button
+              onClick={snapToGrid}
+              disabled={canvasImages.length === 0 || isSnapping}
+              className="px-3 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 
+                       disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {isSnapping ? 'Snapping...' : 'Snap to Grid'}
+            </button>
+            <button
               onClick={clearCanvas}
               disabled={canvasImages.length === 0}
               className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 
@@ -138,6 +164,7 @@ export function SearchCanvas({
             onImageUpdate={handleImageUpdate}
             onImageDelete={handleImageDelete}
             onImageDrop={handleImageDrop}
+            isSnapping={isSnapping}
           />
         </div>
 
