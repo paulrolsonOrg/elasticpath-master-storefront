@@ -46,7 +46,7 @@ export function EditItemQuantityButton({
         }
         aria-disabled={isPending}
         className={cn(
-          "ease flex w-9 h-9 p-2 justify-center items-center transition-all duration-200",
+          "ease flex w-7 h-7 p-1 justify-center items-center transition-all duration-200",
           {
             "cursor-not-allowed": isPending,
             "ml-auto": type === "minus",

@@ -34,32 +34,32 @@ export function CartItemsBaseProductGrouped({
 
   const renderVariantThumbnail = (item: CartItemType) => {
     return (
-      <div key={item.id} className="flex flex-col items-center p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow min-w-0">
+      <div key={item.id} className="flex flex-col items-center p-2 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow min-w-[200px] max-w-xs mx-auto w-full">
         {/* Product Thumbnail */}
-        <div className="w-20 h-20 flex-shrink-0 mb-3">
+        <div className="w-24 h-24 flex-shrink-0 mb-3">
           {item.product_id && <ProductThumbnail productId={item.product_id} />}
           {item.custom_inputs?.image_url && (
             <Image
               src={item.custom_inputs.image_url}
-              width={80}
-              height={80}
+              width={96}
+              height={96}
               alt={item.name}
-              className="w-20 h-20 object-cover rounded"
+              className="w-24 h-24 object-cover rounded"
             />
           )}
         </div>
         
         {/* Variation Details */}
-        <div className="text-center mb-2 w-full">
+        <div className="text-center mb-2 w-full px-1">
           {item.custom_inputs?.options && (
-            <div className="text-sm text-gray-700 font-medium break-words">
+            <div className="text-base text-gray-800 font-semibold break-words">
               {Array.isArray(item.custom_inputs.options) 
                 ? item.custom_inputs.options.join(' / ')
                 : item.custom_inputs.options}
             </div>
           )}
           {item.sku && (
-            <div className="text-xs text-gray-400 mt-1 break-all">
+            <div className="text-xs text-gray-500 mt-1 break-all">
               {item.sku}
             </div>
           )}
@@ -67,13 +67,13 @@ export function CartItemsBaseProductGrouped({
 
         {/* Price */}
         <div className="text-center mb-3 w-full">
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-lg font-bold text-gray-900">
             {item.meta.display_price.with_tax.value.formatted}
           </div>
           {item.meta.display_price.without_discount?.value.amount &&
             item.meta.display_price.without_discount?.value.amount !== 
             item.meta.display_price.with_tax.value.amount && (
-              <div className="text-xs text-gray-400 line-through">
+              <div className="text-sm text-gray-400 line-through">
                 {item.meta.display_price.without_discount?.value.formatted}
               </div>
             )}
@@ -89,13 +89,13 @@ export function CartItemsBaseProductGrouped({
           type="button"
           onClick={() => removeItem({ itemId: item.id })}
           disabled={isRemoving}
-          className="text-red-600 hover:text-red-800 disabled:opacity-50 text-xs flex items-center gap-1 justify-center w-full"
+          className="text-red-600 hover:text-red-800 disabled:opacity-50 text-sm flex items-center gap-2 justify-center w-full py-2"
         >
           {isRemoving ? (
             <LoadingDots className="bg-red-600" />
           ) : (
             <>
-              <TrashIcon className="h-3 w-3" />
+              <TrashIcon className="h-4 w-4" />
               Remove
             </>
           )}
@@ -136,7 +136,7 @@ export function CartItemsBaseProductGrouped({
         )}
         
         {/* Variants Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {group.items.map((item) => renderVariantThumbnail(item))}
         </div>
       </div>

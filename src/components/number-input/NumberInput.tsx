@@ -40,17 +40,17 @@ export const NumberInput = ({ item }: NumberInputProps): JSX.Element => {
   };
 
   return (
-    <div className="flex items-start rounded-lg border border-black/10">
+    <div className="flex items-center rounded-md border border-black/10 w-fit mx-auto">
       <EditItemQuantityButton item={item} type="minus" />
       <svg
-        width="2"
-        height="36"
-        viewBox="0 0 2 36"
+        width="1"
+        height="28"
+        viewBox="0 0 1 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M1 0V36"
+          d="M0.5 0V28"
           stroke="black"
           strokeOpacity="0.1"
           strokeLinecap="round"
@@ -60,7 +60,7 @@ export const NumberInput = ({ item }: NumberInputProps): JSX.Element => {
       <input
         type="number"
         min={1}
-        className="flex w-20 pt-1.5 pb-1 border-none text-center bg-transparent focus:outline-none appearance-none hide-number-spin"
+        className="flex w-12 py-1.5 border-none text-center bg-transparent focus:outline-none appearance-none hide-number-spin text-sm"
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleInputBlurOrEnter}
@@ -84,14 +84,14 @@ export const NumberInput = ({ item }: NumberInputProps): JSX.Element => {
         }
       `}</style>
       <svg
-        width="2"
-        height="36"
-        viewBox="0 0 2 36"
+        width="1"
+        height="28"
+        viewBox="0 0 1 28"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M1 0V36"
+          d="M0.5 0V28"
           stroke="black"
           strokeOpacity="0.1"
           strokeLinecap="round"
