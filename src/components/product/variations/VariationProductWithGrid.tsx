@@ -78,10 +78,10 @@ export function VariationProductWithGridContainer({
 }): JSX.Element {
   const { enableBuilderIO } = cmsConfig;
   const { product, variationsMatrix, variations } = useVariationProduct() as any;
-  const { useScopedAddProductToCart, useScopedAddSubscriptionItemToCart } =
+  const { useScopedAddBulkProductToCart, useScopedAddSubscriptionItemToCart } =
     useCart();
-  const { mutate: mutateAddItem, isPending: isPendingAddItem } =
-    useScopedAddProductToCart();
+  const { mutate: mutateAddBulkItems, isPending: isPendingBulkAdd } =
+    useScopedAddBulkProductToCart();
   const {
     mutate: mutateAddSubscriptionItem,
     isPending: isPendingSubscriptionItem,
@@ -144,20 +144,11 @@ export function VariationProductWithGridContainer({
 
     const formData = new FormData(event.currentTarget);
     const itemsToAdd = variationQuantities.filter(vq => vq.quantity > 0);
-    const totalItems = itemsToAdd.length;
-    let successCount = 0;
     
-    console.log(`Attempting to add ${totalItems} different items to cart:`, itemsToAdd);
+    console.log(`Attempting to add ${itemsToAdd.length} different items to cart using bulk API:`, itemsToAdd);
     
-    // Sequential processing function
-    const processNextItem = (itemIndex: number) => {
-      if (itemIndex >= itemsToAdd.length) {
-        return;
-      }
-      
-      const variationQty = itemsToAdd[itemIndex];
-      console.log(`Processing item ${itemIndex + 1}/${totalItems}:`, variationQty);
-
+    // Prepare bulk items array
+    const bulkItems = itemsToAdd.map((variationQty) => {
       // Get the product ID for this specific variation combination
       let targetProductId: string;
       
@@ -200,26 +191,24 @@ export function VariationProductWithGridContainer({
         });
       }
 
-      const data: any = {
-        custom_inputs: {
-          additional_information: variationInfo,
-          options: variationQty.optionName.split(' / '), // Split combined option names
-          base_product_id: baseProduct?.id || id, // Store base product ID for grouping
-          base_product_name: baseProduct?.attributes?.name || response.attributes.name, // Store base product name
-        },
+      const customInputs: any = {
+        additional_information: variationInfo,
+        options: variationQty.optionName.split(' / '), // Split combined option names
+        base_product_id: baseProduct?.id || id, // Store base product ID for grouping
+        base_product_name: baseProduct?.attributes?.name || response.attributes.name, // Store base product name
       };
       
       if (enableClickAndCollect) {
         const deliveryMode = formData.get("delivery_mode");
         if (deliveryMode) {
-          data.custom_inputs.location = {};
-          data.custom_inputs.location.delivery_mode = deliveryMode;
+          customInputs.location = {};
+          customInputs.location.delivery_mode = deliveryMode;
         }
         const locationCode = formData.get("location_code");
         const locationName = formData.get("location_name");
         if (locationCode && locationName) {
-          data.custom_inputs.location.location_name = locationName;
-          data.custom_inputs.location.location_code = locationCode;
+          customInputs.location.location_name = locationName;
+          customInputs.location.location_code = locationCode;
         }
       }
       
@@ -231,7 +220,7 @@ export function VariationProductWithGridContainer({
               key: response.attributes.custom_inputs[input].name,
               value,
             };
-            data.custom_inputs.additional_information.push(info);
+            customInputs.additional_information.push(info);
           }
         });
 
@@ -241,84 +230,78 @@ export function VariationProductWithGridContainer({
           value:
             response?.attributes?.extensions?.["products(vendor)"]?.vendor_name,
         };
-        info.value && data.custom_inputs.additional_information.push(info);
-        data.custom_inputs.vendor_store_id =
+        info.value && customInputs.additional_information.push(info);
+        customInputs.vendor_store_id =
           response?.attributes?.extensions?.["products(vendor)"]?.vendor_store_id;
       }
 
-      const price_type = formData.get("price_type")?.toString() || "";
-      
-      console.log(`Adding item ${itemIndex + 1}/${totalItems} to cart:`, {
-        productId: targetProductId,
+      return {
+        type: "cart_item",
+        id: targetProductId,
         quantity: variationQty.quantity,
-        optionName: variationQty.optionName,
-        data
-      });
-      
-      if (price_type === "" || price_type === "one_time") {
-        mutateAddItem(
-          { productId: targetProductId, quantity: variationQty.quantity, data },
-          {
-            onSuccess: () => {
-              successCount++;
-              console.log(`Item ${itemIndex + 1} added successfully. Success count: ${successCount}/${totalItems}`);
-              setIsOverlayOpen(false);
-              
-              // Process next item or show completion message
-              if (itemIndex + 1 < itemsToAdd.length) {
-                // More items to process - continue with next item
-                processNextItem(itemIndex + 1);
-              } else {
-                // All items processed - show success message
-                toast.success(`Added ${successCount} item${successCount > 1 ? 's' : ''} to cart`, {
-                  position: "top-center",
-                  autoClose: 2000,
-                  hideProgressBar: false,
-                });
-                // Clear quantities after successful additions
-                setVariationQuantities([]);
-              }
-            },
-            onError: (response: any) => {
-              console.error(`Error adding item ${itemIndex + 1} (${variationQty.optionName}):`, response);
-              if (response?.errors) {
-                toast.error(`Error adding ${variationQty.optionName}: ${response?.errors?.[0].detail}`, {
-                  position: "top-center",
-                  autoClose: 3000,
-                  hideProgressBar: false,
-                });
-              }
-              // Continue with next item even if this one failed
-              if (itemIndex + 1 < itemsToAdd.length) {
-                processNextItem(itemIndex + 1);
-              }
-            },
-          },
-        );
-      } else {
-        const planId = formData.get("plan")?.toString() || "";
-        const pricingOptionId = formData.get("pricing_option")?.toString() || "";
-        if (main_image?.link?.href) {
-          data.custom_inputs.image_url = main_image?.link?.href;
-        }
-        mutateAddSubscriptionItem({
-          data: {
-            type: "subscription_item",
-            id: price_type,
-            quantity: variationQty.quantity,
-            subscription_configuration: {
-              plan: planId,
-              pricing_option: pricingOptionId,
-            },
-            custom_inputs: data.custom_inputs,
-          },
-        });
-      }
-    };
+        custom_inputs: customInputs,
+      };
+    });
+
+    const price_type = formData.get("price_type")?.toString() || "";
     
-    // Start processing the first item
-    if (itemsToAdd.length > 0) {
-      processNextItem(0);
+    if (price_type === "" || price_type === "one_time") {
+      console.log('Adding bulk items to cart:', bulkItems);
+      
+      mutateAddBulkItems(bulkItems, {
+        onSuccess: () => {
+          console.log(`Successfully added ${bulkItems.length} items to cart`);
+          setIsOverlayOpen(false);
+          toast.success(`Added ${bulkItems.length} item${bulkItems.length > 1 ? 's' : ''} to cart`, {
+            position: "top-center",
+            autoClose: 2000,
+            hideProgressBar: false,
+          });
+          // Clear quantities after successful additions
+          setVariationQuantities([]);
+        },
+        onError: (response: any) => {
+          console.error('Error adding bulk items to cart:', response);
+          if (response?.errors) {
+            toast.error(`Error adding items: ${response?.errors?.[0].detail}`, {
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+            });
+          } else {
+            toast.error("Error adding items to cart", {
+              position: "top-center",
+              autoClose: 3000,
+              hideProgressBar: false,
+            });
+          }
+        },
+      });
+    } else {
+      // Handle subscription items - these still need individual processing
+      // as bulk subscription API might not be available
+      const planId = formData.get("plan")?.toString() || "";
+      const pricingOptionId = formData.get("pricing_option")?.toString() || "";
+      
+      // For subscription items, process the first one only for now
+      const firstItem = itemsToAdd[0];
+      const customInputs = bulkItems[0].custom_inputs;
+      if (main_image?.link?.href) {
+        customInputs.image_url = main_image?.link?.href;
+      }
+      
+      mutateAddSubscriptionItem({
+        data: {
+          type: "subscription_item",
+          id: price_type,
+          quantity: firstItem.quantity,
+          subscription_configuration: {
+            plan: planId,
+            pricing_option: pricingOptionId,
+          },
+          custom_inputs: customInputs,
+        },
+      });
     }
   };
 
@@ -401,7 +384,7 @@ export function VariationProductWithGridContainer({
                 }
                 type="submit"
                 status={
-                  isPendingAddItem || isPendingSubscriptionItem
+                  isPendingBulkAdd || isPendingSubscriptionItem
                     ? "loading"
                     : "idle"
                 }

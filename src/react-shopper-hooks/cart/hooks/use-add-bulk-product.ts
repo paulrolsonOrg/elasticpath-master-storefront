@@ -9,7 +9,7 @@ export const useAddBulkProductToCart = (
   const { client } = useElasticPath();
   return useMutation({
     mutationFn: async (items) => {
-      return client.Cart(cartId).BulkAdd(items, { add_all_or_nothing: false });
+      return client.Cart(cartId).BulkAdd(items, { add_all_or_nothing: true });
     },
     ...options,
   });
