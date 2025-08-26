@@ -217,9 +217,9 @@ function AddressFormCore({
         setTimeout(() => {
           console.log('🔍 Triggering form validation...');
           const fieldsToValidate = updates.map(({ field }) => getFieldName(field));
-          trigger(fieldsToValidate).then((isValid) => {
+          trigger(fieldsToValidate).then((isValid: boolean) => {
             console.log('Form validation result:', isValid);
-          }).catch((error) => {
+          }).catch((error: any) => {
             console.error('Form validation error:', error);
           });
         }, 100);
