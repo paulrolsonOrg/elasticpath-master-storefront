@@ -27,7 +27,7 @@ export function AddressForm({
         instructions: addressField === "shippingAddress",
       }}
       layout="checkout"
-      useStaticCountries={false}
+      useStaticCountries={true}
       enableGooglePlaces={true}
     />
   );

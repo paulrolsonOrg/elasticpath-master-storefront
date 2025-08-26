@@ -107,13 +107,13 @@ export function UnifiedAddressForm(props: UnifiedAddressFormProps) {
 
 // Component for React Hook Form mode (can call useFormContext)
 function RHFAddressForm(props: UnifiedAddressFormProps) {
-  const { control, setValue } = useFormContext();
-  return <AddressFormCore {...props} control={control} setValue={setValue} />;
+  const { control, setValue, trigger } = useFormContext();
+  return <AddressFormCore {...props} control={control} setValue={setValue} trigger={trigger} />;
 }
 
 // Component for Server Action mode (doesn't call useFormContext)
 function SAAddressForm(props: UnifiedAddressFormProps) {
-  return <AddressFormCore {...props} control={null} setValue={null} />;
+  return <AddressFormCore {...props} control={null} setValue={null} trigger={null} />;
 }
 
 // Core component that contains the actual form logic
@@ -133,7 +133,8 @@ function AddressFormCore({
   googlePlacesCountries,
   control,
   setValue,
-}: UnifiedAddressFormProps & { control: any; setValue: any }) {
+  trigger,
+}: UnifiedAddressFormProps & { control: any; setValue: any; trigger: any }) {
   const finalFields = { ...defaultFields, ...fields };
   const { data: dynamicCountries } = useCountries();
   const countries = useStaticCountries ? staticCountries : dynamicCountries;
@@ -146,17 +147,89 @@ function AddressFormCore({
 
   // Handle Google Places selection
   const handlePlaceSelect = React.useCallback((placeResult: PlaceResult) => {
+    console.log('🏠 Google Places result received:', placeResult);
+    
     if (mode === 'react-hook-form' && setValue) {
-      // Update React Hook Form fields using setValue
-      setValue(getFieldName('line_1'), placeResult.line_1);
-      setValue(getFieldName('city'), placeResult.city);
-      setValue(getFieldName('region'), placeResult.region);
-      setValue(getFieldName('postcode'), placeResult.postcode);
-      setValue(getFieldName('country'), placeResult.country);
+      console.log('📋 Updating React Hook Form fields...');
+      
+      // Update React Hook Form fields using setValue with shouldValidate: false to prevent validation errors
+      const updates = [
+        { field: 'line_1', value: placeResult.line_1 },
+        { field: 'city', value: placeResult.city },
+        { field: 'region', value: placeResult.region },
+        { field: 'postcode', value: placeResult.postcode },
+        { field: 'country', value: placeResult.country },
+      ];
+      
+      updates.forEach(({ field, value }) => {
+        const fieldName = getFieldName(field);
+        console.log(`  Setting ${fieldName} = "${value}"`);
+        setValue(fieldName, value, { 
+          shouldValidate: false,
+          shouldDirty: true,
+          shouldTouch: true 
+        });
+      });
+      
+      // Also update DOM elements directly as a fallback (especially for Select components)
+      setTimeout(() => {
+        console.log('🔄 Applying DOM fallback updates...');
+        updates.forEach(({ field, value }) => {
+          if (!value) return;
+          
+          const fieldName = getFieldName(field);
+          // Try to find the actual DOM element by various selectors
+          const selectors = [
+            `input[name="${fieldName}"]`,
+            `select[name="${fieldName}"]`,
+            `[data-field-name="${fieldName}"]`,
+            `[name*="${field}"]`
+          ];
+          
+          let element: HTMLInputElement | HTMLSelectElement | null = null;
+          for (const selector of selectors) {
+            element = document.querySelector(selector);
+            if (element) {
+              console.log(`  Found DOM element for ${fieldName} using selector: ${selector}`);
+              break;
+            }
+          }
+          
+          if (element) {
+            if (element.value !== value) {
+              element.value = value;
+              // Trigger change events
+              const events = ['change', 'input', 'blur'];
+              events.forEach(eventType => {
+                const event = new Event(eventType, { bubbles: true });
+                element!.dispatchEvent(event);
+              });
+              console.log(`  DOM updated ${fieldName} = "${value}"`);
+            }
+          } else {
+            console.warn(`  Could not find DOM element for field: ${fieldName}`);
+          }
+        });
+      }, 50);
+      
+      // Trigger validation for the updated fields to ensure React Hook Form recognizes changes
+      if (trigger) {
+        setTimeout(() => {
+          console.log('🔍 Triggering form validation...');
+          const fieldsToValidate = updates.map(({ field }) => getFieldName(field));
+          trigger(fieldsToValidate).then((isValid) => {
+            console.log('Form validation result:', isValid);
+          }).catch((error) => {
+            console.error('Form validation error:', error);
+          });
+        }, 100);
+      }
+      
+      console.log('✅ All fields updated');
     }
     // For server action mode, the GooglePlacesAutocomplete component
     // will update the DOM inputs directly via JavaScript
-  }, [mode, setValue, getFieldName]);
+  }, [mode, setValue, getFieldName, trigger]);
 
   const getAutoComplete = React.useCallback((field: string) => {
     if (autoComplete === 'none') return undefined;
