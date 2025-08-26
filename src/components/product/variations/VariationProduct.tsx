@@ -124,6 +124,8 @@ export function VariationProductContainer({
       custom_inputs: {
         additional_information: [],
         options: [],
+        base_product_id: baseProduct?.id || id, // Store base product ID for grouping
+        base_product_name: baseProduct?.attributes?.name || response.attributes.name, // Store base product name
       },
     };
     if (enableClickAndCollect) {

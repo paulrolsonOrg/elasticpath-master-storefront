@@ -38,6 +38,53 @@ export function CartItem({
   const { mutate: mutateUpdate } = useScopedUpdateCartItem();
   const [openDiscount, setOpenDiscount] = useState(false);
 
+  // Console log all available cart item information
+  console.log('=== CART ITEM DEBUG INFO ===');
+  console.log('Cart Item ID:', item.id);
+  console.log('Full Item Object:', item);
+  console.log('Item Name:', item.name);
+  console.log('Item SKU:', item.sku);
+  console.log('Product ID:', item.product_id);
+  console.log('Slug:', item.slug);
+  console.log('Quantity:', item.quantity);
+  console.log('Item Type:', item.type);
+  
+  console.log('--- Custom Inputs ---');
+  console.log('Custom Inputs Object:', item.custom_inputs);
+  if (item.custom_inputs) {
+    console.log('Custom Inputs Keys:', Object.keys(item.custom_inputs));
+    console.log('Options:', item.custom_inputs.options);
+    console.log('Additional Information:', item.custom_inputs.additional_information);
+    console.log('Image URL:', item.custom_inputs.image_url);
+    console.log('Location:', item.custom_inputs.location);
+    console.log('Vendor Store ID:', item.custom_inputs.vendor_store_id);
+  }
+  
+  console.log('--- Pricing ---');
+  console.log('Meta Object:', item.meta);
+  console.log('Display Price:', item.meta?.display_price);
+  console.log('Unit Price (with tax):', item.meta?.display_price?.with_tax?.unit?.formatted);
+  console.log('Total Price (with tax):', item.meta?.display_price?.with_tax?.value?.formatted);
+  console.log('Without Discount Price:', item.meta?.display_price?.without_discount?.value?.formatted);
+  
+  console.log('--- Relationships ---');
+  console.log('Relationships Object:', item.relationships);
+  if (item.relationships) {
+    console.log('Custom Discounts:', item.relationships.custom_discounts);
+    console.log('Cart Item to Bundle Component Options:', item.relationships.cart_item_to_bundle_component_options);
+    console.log('Cart Item Personal Pricing:', item.relationships.cart_item_personal_pricing);
+  }
+  
+  console.log('--- Component Props ---');
+  console.log('Admin Display:', adminDisplay);
+  console.log('Enable Custom Discount:', enableCustomDiscount);
+  console.log('Selected Account:', selectedAccount);
+  console.log('Item Custom Discount:', itemCustomDiscount);
+  console.log('Cart ID:', cartId);
+  
+  console.log('=== END CART ITEM DEBUG ===');
+  console.log(''); // Empty line for separation
+
   const removeCustomDiscount = async (customDiscountId: string) => {
     await deleteItemCustomDiscount(cartId, item.id, customDiscountId);
     mutateUpdate({

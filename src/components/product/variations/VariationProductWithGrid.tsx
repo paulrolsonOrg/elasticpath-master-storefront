@@ -204,6 +204,8 @@ export function VariationProductWithGridContainer({
         custom_inputs: {
           additional_information: variationInfo,
           options: variationQty.optionName.split(' / '), // Split combined option names
+          base_product_id: baseProduct?.id || id, // Store base product ID for grouping
+          base_product_name: baseProduct?.attributes?.name || response.attributes.name, // Store base product name
         },
       };
       
